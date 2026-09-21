@@ -1,6 +1,6 @@
-# Split Bill — mobile-first edition v9
+# Split Bill — mobile-first edition v10
 
-เว็บหารบิลสำหรับมือถือ: สมาชิก / รายการ / สรุปยอด พร้อมสแกนใบเสร็จด้วย Google Gemini และดาวน์โหลดภาพสรุปภาษาไทยเป็น PNG
+เว็บหารบิลสำหรับมือถือ: สมาชิก / รายการ / สรุปยอด พร้อมสแกนใบเสร็จด้วย Google Gemini และดาวน์โหลดภาพสรุปภาษาอังกฤษเป็น PNG
 
 ## Run locally
 
@@ -30,7 +30,7 @@ GEMINI_API_KEY = "your_key_here"
 GEMINI_MODEL = "gemini-3.8-flash"
 ```
 
-`packages.txt` จะติดตั้งฟอนต์ภาษาไทยบน Linux เพื่อให้ภาพ PNG ที่ดาวน์โหลดอ่านภาษาไทยได้ถูกต้อง
+`packages.txt` จะติดตั้ง DejaVu Sans บน Linux เพื่อให้ภาพ PNG ภาษาอังกฤษแสดงผลได้เหมือนกันบน Streamlit Cloud
 
 ## Main features
 
@@ -41,7 +41,7 @@ GEMINI_MODEL = "gemini-3.8-flash"
 - เลือกสมาชิกที่ร่วมจ่ายในแต่ละรายการ
 - คำนวณค่า Service / VAT / Discount ตามสัดส่วน
 - คำนวณยอดที่สมาชิกแต่ละคนต้องจ่าย
-- บันทึกภาพสรุป PNG ภาษาไทย
+- บันทึกภาพสรุป PNG ภาษาอังกฤษที่รองรับทุกอุปกรณ์
 
 ## UI v4
 
@@ -77,3 +77,10 @@ GEMINI_MODEL = "gemini-3.8-flash"
 - แก้ `StreamlitWidgetAlreadyInstantiatedError` ที่เกิดจากปุ่ม `เลือกทุกคน`
 - ปุ่ม `เลือกทุกคน` ใช้ callback เพื่ออัปเดต multiselect ก่อนสร้าง widget ในรอบถัดไป
 - ปุ่มเพิ่มสมาชิกใช้ callback เช่นกัน จึงไม่แก้ค่า widget หลัง widget ถูกสร้างแล้ว
+
+## v10 — English PNG export
+
+- ภาพสรุป PNG ใช้ข้อความภาษาอังกฤษและสกุลเงิน `THB` เพื่อให้แสดงผลได้เหมือนกันทั้ง Windows, macOS, iPhone และ Streamlit Cloud
+- ชื่อร้าน ชื่อสมาชิก หรือชื่อรายการที่เป็นภาษาอังกฤษจะคงชื่อเดิม
+- ข้อความที่มีภาษาไทยในภาพจะถูกแทนด้วยชื่อที่อ่านได้ เช่น `Shared meal`, `Member 1` และ `Item 1` เพื่อไม่ให้เกิดสี่เหลี่ยมแทนตัวอักษร
+- หน้าเว็บหลักยังคงเป็นภาษาไทยเหมือนเดิม

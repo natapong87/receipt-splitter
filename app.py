@@ -453,6 +453,7 @@ else:
         m3.metric("ส่วนต่าง", f"{allocated_total - receipt:,.2f}" if receipt else "-")
 
         st.markdown("#### 📤 แชร์สรุป")
+        st.caption("ภาพ PNG ใช้ภาษาอังกฤษเพื่อให้ตัวอักษรแสดงได้ถูกต้องบนทุกอุปกรณ์")
         share_png = build_share_card(
             merchant=st.session_state.merchant,
             people=st.session_state.people,
@@ -463,7 +464,7 @@ else:
         )
         st.image(share_png, use_container_width=True)
         st.download_button(
-            "📸 บันทึกภาพสรุป (.png)",
+            "📸 บันทึกภาพสรุปภาษาอังกฤษ (.png)",
             data=share_png,
             file_name="bill_summary.png",
             mime="image/png",
