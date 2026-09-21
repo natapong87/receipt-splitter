@@ -5,7 +5,6 @@ import html
 import json
 import uuid
 
-import pandas as pd
 import streamlit as st
 
 from billing import calculate_bill
@@ -63,7 +62,6 @@ header[data-testid="stHeader"] { height:0; min-height:0; background:transparent;
 .muted { color:var(--muted); font-size:.78rem; }
 .pills { margin-top:4px; display:flex; gap:5px; flex-wrap:wrap; }
 .pill { display:inline-block; border-radius:7px; padding:2px 7px; font-size:.70rem; font-weight:700; color:#fff; background:#18866d; }
-.payer-pill { background:#488d19; }
 .unassigned-pill { background:#aab1bc; }
 div[data-testid="stVerticalBlockBorderWrapper"] { border-color:var(--line)!important; border-radius:12px!important; box-shadow:none!important; }
 .stButton button, .stDownloadButton button { border-radius:8px; font-weight:700; }
@@ -169,19 +167,22 @@ def init_state():
         if key not in st.session_state:
             st.session_state[key] = value
 
+    # Migrate sessions created by older versions that stored a payer per item.
+    for expense in st.session_state.expenses:
+        expense.pop("payer", None)
+
 
 def new_id() -> str:
     return uuid.uuid4().hex[:10]
 
 
-def add_expense(name="รายการใหม่", price=0.0, consumers=None, payer=""):
+def add_expense(name="รายการใหม่", price=0.0, consumers=None):
     st.session_state.expenses.append(
         {
             "id": new_id(),
             "name": str(name or "รายการใหม่"),
             "price": round(float(price or 0), 2),
             "people": list(consumers or []),
-            "payer": payer or "",
         }
     )
 
@@ -201,40 +202,34 @@ def bill_result():
     )
 
 
-def paid_totals() -> dict[str, float]:
-    paid = {p: 0.0 for p in st.session_state.people}
-    for item in st.session_state.expenses:
-        payer = item.get("payer")
-        if payer in paid:
-            paid[payer] += float(item.get("price", 0))
-    # Extra charges are treated as not prepaid because receipt rarely identifies who paid them.
-    return paid
-
-
-def settlements(net: dict[str, float]):
-    creditors = [[p, v] for p, v in net.items() if v > 0.005]
-    debtors = [[p, -v] for p, v in net.items() if v < -0.005]
-    creditors.sort(key=lambda x: x[1], reverse=True)
-    debtors.sort(key=lambda x: x[1], reverse=True)
-    out = []
-    i = j = 0
-    while i < len(debtors) and j < len(creditors):
-        amount = min(debtors[i][1], creditors[j][1])
-        if amount > 0.005:
-            out.append((debtors[i][0], creditors[j][0], round(amount, 2)))
-        debtors[i][1] -= amount
-        creditors[j][1] -= amount
-        if debtors[i][1] < 0.005:
-            i += 1
-        if creditors[j][1] < 0.005:
-            j += 1
-    return out
-
-
 def chips(names, css_class="pill"):
     if not names:
         return '<span class="pill unassigned-pill">ยังไม่เลือก</span>'
     return "".join(f'<span class="pill {css_class}">{html.escape(str(n))}</span>' for n in names)
+
+
+def add_member_from_input():
+    """Add a member before widgets are recreated on the next Streamlit rerun."""
+    name = str(st.session_state.get("new_member", "")).strip()
+    if name and name not in st.session_state.people:
+        st.session_state.people.append(name)
+    st.session_state["new_member"] = ""
+
+
+def select_all_consumers(item_id: str):
+    """Safely update a multiselect from a button callback.
+
+    Streamlit does not allow changing a widget key after that widget has already
+    been instantiated in the same run. A callback executes before the next run,
+    so updating the multiselect state here avoids
+    StreamlitWidgetAlreadyInstantiatedError.
+    """
+    selected = list(st.session_state.people)
+    for expense in st.session_state.expenses:
+        if expense.get("id") == item_id:
+            expense["people"] = selected
+            break
+    st.session_state[f"people_{item_id}"] = selected
 
 
 def import_receipt(parsed):
@@ -302,12 +297,13 @@ if view == "สมาชิก":
                 width="stretch",
             )
         with btn_col:
-            if st.button("เพิ่ม", type="primary", width="stretch", key="add_member"):
-                name = new_member.strip()
-                if name and name not in st.session_state.people:
-                    st.session_state.people.append(name)
-                    st.session_state.new_member = ""
-                    st.rerun()
+            st.button(
+                "เพิ่ม",
+                type="primary",
+                width="stretch",
+                key="add_member",
+                on_click=add_member_from_input,
+            )
 
     if not st.session_state.people:
         st.info("เพิ่มสมาชิกก่อนเริ่มหารบิล")
@@ -336,8 +332,6 @@ if view == "สมาชิก":
                     st.session_state.people.remove(person)
                     for item in st.session_state.expenses:
                         item["people"] = [p for p in item.get("people", []) if p != person]
-                        if item.get("payer") == person:
-                            item["payer"] = ""
                     st.rerun()
             st.markdown('<div class="member-divider"></div>', unsafe_allow_html=True)
 
@@ -347,7 +341,6 @@ if view == "สมาชิก":
                 st.session_state.people = []
                 for item in st.session_state.expenses:
                     item["people"] = []
-                    item["payer"] = ""
                 st.rerun()
 
 elif view == "รายการ":
@@ -413,21 +406,15 @@ elif view == "รายการ":
             )
             item["people"] = selected
 
-            payer_options = ["ยังไม่ระบุ", *st.session_state.people]
-            current_payer = item.get("payer") if item.get("payer") in st.session_state.people else "ยังไม่ระบุ"
-            payer = st.selectbox(
-                "คนจ่ายก่อน",
-                payer_options,
-                index=payer_options.index(current_payer),
-                key=f"payer_{item['id']}",
-            )
-            item["payer"] = "" if payer == "ยังไม่ระบุ" else payer
 
             c_all, c_del = st.columns([3, 1])
-            if c_all.button("เลือกทุกคน", key=f"all_{item['id']}", use_container_width=True):
-                item["people"] = list(st.session_state.people)
-                st.session_state[f"people_{item['id']}"] = list(st.session_state.people)
-                st.rerun()
+            c_all.button(
+                "เลือกทุกคน",
+                key=f"all_{item['id']}",
+                use_container_width=True,
+                on_click=select_all_consumers,
+                args=(item["id"],),
+            )
             if c_del.button("ลบ", key=f"del_{item['id']}", use_container_width=True):
                 st.session_state.expenses = [x for x in st.session_state.expenses if x["id"] != item["id"]]
                 st.rerun()
@@ -447,30 +434,16 @@ else:
         st.info("ยังไม่มีรายการสำหรับสรุป")
     else:
         result = bill_result()
-        paid = paid_totals()
         owed = {p: float(result["totals"].get(p, 0)) for p in st.session_state.people}
-        net = {p: round(paid.get(p, 0) - owed.get(p, 0), 2) for p in st.session_state.people}
 
         if result["unassigned"]:
             st.warning(f"มี {len(result['unassigned'])} รายการที่ยังไม่ได้เลือกคนหาร จึงยังไม่ถูกรวมในยอดของสมาชิก")
 
         for p in st.session_state.people:
             with st.container(border=True):
-                c1, c2 = st.columns([2, 3])
+                c1, c2 = st.columns([2, 1], vertical_alignment="center", wrap=False)
                 c1.markdown(f"**{html.escape(p)}**")
-                c2.markdown(
-                    f"ต้องรับผิดชอบ **{owed[p]:,.2f}** · จ่ายไป **{paid[p]:,.2f}** · สุทธิ **{net[p]:+,.2f}**"
-                )
-
-        transfers = settlements(net)
-        if transfers:
-            st.markdown("#### 💸 วิธีเคลียร์เงิน")
-            for sender, receiver, amount in transfers:
-                st.markdown(f"**{html.escape(sender)} → {html.escape(receiver)} : {amount:,.2f} บาท**")
-        elif any(paid.values()):
-            st.success("ยอดที่ระบุผู้จ่ายสมดุลแล้ว")
-        else:
-            st.caption("ยังไม่ได้ระบุคนจ่ายก่อนในแต่ละรายการ จึงยังคำนวณการโอนคืนไม่ได้")
+                c2.markdown(f"**{owed[p]:,.2f} บาท**")
 
         allocated_total = sum(owed.values())
         m1, m2, m3 = st.columns(3)
@@ -487,9 +460,6 @@ else:
             calculated_total=allocated_total,
             receipt_total=float(st.session_state.receipt_total),
             items=st.session_state.expenses,
-            paid=paid,
-            net=net,
-            settlements=transfers,
         )
         st.image(share_png, use_container_width=True)
         st.download_button(
@@ -505,8 +475,7 @@ else:
             "merchant": st.session_state.merchant,
             "members": st.session_state.people,
             "expenses": st.session_state.expenses,
-            "summary": {p: {"owed": owed[p], "paid": paid[p], "net": net[p]} for p in st.session_state.people},
-            "settlements": transfers,
+            "summary": {p: {"amount": owed[p]} for p in st.session_state.people},
         }
         st.download_button(
             "ดาวน์โหลดข้อมูล (.json)",

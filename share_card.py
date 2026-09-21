@@ -103,19 +103,15 @@ def _money(value):
     return f"{float(value):,.2f} บาท"
 
 
-def build_share_card(*, merchant, people, totals, calculated_total, receipt_total, items=None, paid=None, net=None, settlements=None) -> bytes:
+def build_share_card(*, merchant, people, totals, calculated_total, receipt_total, items=None) -> bytes:
     items = items or []
-    paid = paid or {p: 0 for p in people}
-    net = net or {p: -totals.get(p, 0) for p in people}
-    settlements = settlements or []
 
     width = 1080
     margin = 70
     row_h = 82
-    settlement_h = 0 if not settlements else 80 + len(settlements) * 55
     item_rows = min(10, len([i for i in items if i.get("people")]))
     items_h = 0 if item_rows == 0 else 95 + item_rows * 48
-    height = 330 + max(1, len(people)) * row_h + settlement_h + items_h + 220
+    height = 330 + max(1, len(people)) * row_h + items_h + 220
 
     image = Image.new("RGB", (width, height), "#FFFFFF")
     draw = ImageDraw.Draw(image)
@@ -136,7 +132,6 @@ def build_share_card(*, merchant, people, totals, calculated_total, receipt_tota
 
     for person in people:
         _draw(draw, (margin, y), str(person), size=28, bold=True)
-        _draw(draw, (margin + 310, y), f"จ่ายไป {_money(paid.get(person,0))}", size=22, fill="#7D8794")
         _draw(draw, (width - margin, y), _money(totals.get(person, 0)), size=28, bold=True, right=True)
         y += row_h
 
@@ -149,17 +144,6 @@ def build_share_card(*, merchant, people, totals, calculated_total, receipt_tota
         _draw(draw, (margin, y), "ยอดบนใบเสร็จ", size=24, fill="#7D8794")
         _draw(draw, (width - margin, y), _money(receipt_total), size=24, fill="#7D8794", right=True)
         y += 48
-
-    if settlements:
-        y += 12
-        draw.line((margin, y, width - margin, y), fill="#E7EBF0", width=3)
-        y += 28
-        _draw(draw, (margin, y), "วิธีเคลียร์เงิน", size=28, bold=True)
-        y += 48
-        for sender, receiver, amount in settlements:
-            _draw(draw, (margin, y), f"{sender}  →  {receiver}", size=25, bold=True)
-            _draw(draw, (width - margin, y), _money(amount), size=25, bold=True, right=True)
-            y += 55
 
     assigned = [i for i in items if i.get("people")][:10]
     if assigned:
