@@ -43,20 +43,33 @@ div[data-testid="stVerticalBlockBorderWrapper"] { border-color:var(--line)!impor
 div[role="radiogroup"] {
   display:grid;
   grid-template-columns:repeat(3, minmax(0, 1fr));
-  gap:8px;
+  gap:10px;
+  width:min(92%, 560px);
+  margin:0 auto 16px;
+  padding:0 0 10px;
   border-bottom:1px solid var(--line);
-  margin:0 18px 12px;
-  padding:0 8px 8px;
 }
 div[role="radiogroup"] label {
   width:100%;
   justify-content:center;
-  padding:8px 12px 10px;
+  padding:8px 10px 10px;
   border-radius:10px;
+  text-align:center;
+}
+.member-name {
+  font-weight:800;
+  font-size:1rem;
+  color:var(--text);
+  padding:.55rem .15rem .45rem;
+}
+.member-divider {
+  height:1px;
+  background:var(--line);
+  margin:1px 0 4px;
 }
 @media (max-width: 640px) {
-  div[role="radiogroup"] { margin-left:8px; margin-right:8px; gap:6px; padding-left:4px; padding-right:4px; }
-  div[role="radiogroup"] label { padding-left:8px; padding-right:8px; }
+  div[role="radiogroup"] { width:88%; gap:4px; }
+  div[role="radiogroup"] label { padding-left:4px; padding-right:4px; }
 }
 [data-testid="stMetric"] { background:var(--soft); padding:10px 12px; border-radius:10px; }
 @media (max-width: 640px) {
@@ -80,7 +93,7 @@ def init_state():
         "vat": 0.0,
         "discount": 0.0,
         "receipt_total": 0.0,
-        "active_view": "รายการ",
+        "active_view": "สมาชิก",
         "receipt_hash": None,
     }
     for key, value in defaults.items():
@@ -210,16 +223,16 @@ if view == "สมาชิก":
     if not st.session_state.people:
         st.info("เพิ่มสมาชิกก่อนเริ่มหารบิล")
     for idx, person in enumerate(list(st.session_state.people)):
-        with st.container(border=True):
-            c1, c2 = st.columns([5, 1])
-            c1.markdown(f"**{html.escape(person)}**")
-            if c2.button("✕", key=f"remove_person_{idx}", use_container_width=True):
-                st.session_state.people.remove(person)
-                for item in st.session_state.expenses:
-                    item["people"] = [p for p in item.get("people", []) if p != person]
-                    if item.get("payer") == person:
-                        item["payer"] = ""
-                st.rerun()
+        c1, c2 = st.columns([8, 1], vertical_alignment="center")
+        c1.markdown(f'<div class="member-name">{html.escape(person)}</div>', unsafe_allow_html=True)
+        if c2.button("✕", key=f"remove_person_{idx}", use_container_width=True):
+            st.session_state.people.remove(person)
+            for item in st.session_state.expenses:
+                item["people"] = [p for p in item.get("people", []) if p != person]
+                if item.get("payer") == person:
+                    item["payer"] = ""
+            st.rerun()
+        st.markdown('<div class="member-divider"></div>', unsafe_allow_html=True)
 
     if st.session_state.people and st.button("ล้างสมาชิกทั้งหมด", use_container_width=True):
         st.session_state.people = []
