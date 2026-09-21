@@ -18,3 +18,14 @@ def test_select_all_uses_safe_callback():
 
 def test_add_member_uses_callback():
     assert "on_click=add_member_from_input" in APP_SOURCE
+
+
+def test_mobile_compact_expense_rows_and_red_delete_buttons():
+    assert 'expense_card_' in APP_SOURCE
+    assert 'name_col, price_col, delete_col = st.columns' in APP_SOURCE
+    assert 'people_col, all_col = st.columns' in APP_SOURCE
+    assert APP_SOURCE.count('wrap=False') >= 5
+    assert '[class*="st-key-remove_person_"] button' in APP_SOURCE
+    assert '[class*="st-key-del_"] button' in APP_SOURCE
+    assert 'background:#ef4444!important' in APP_SOURCE
+    assert 'color:#fff!important' in APP_SOURCE

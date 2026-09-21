@@ -67,6 +67,49 @@ div[data-testid="stVerticalBlockBorderWrapper"] { border-color:var(--line)!impor
 .stButton button, .stDownloadButton button { border-radius:8px; font-weight:700; }
 .stButton button[kind="primary"], .stDownloadButton button[kind="primary"] { background:var(--blue); border-color:var(--blue); }
 
+/* Destructive buttons: compact red buttons with white text/icons. */
+[class*="st-key-remove_person_"] button,
+[class*="st-key-del_"] button {
+  background:#ef4444!important;
+  border-color:#ef4444!important;
+  color:#fff!important;
+  box-shadow:none!important;
+}
+[class*="st-key-remove_person_"] button:hover,
+[class*="st-key-del_"] button:hover {
+  background:#dc2626!important;
+  border-color:#dc2626!important;
+  color:#fff!important;
+}
+[class*="st-key-remove_person_"] button:active,
+[class*="st-key-del_"] button:active {
+  background:#b91c1c!important;
+  border-color:#b91c1c!important;
+}
+
+/* Expense editor: keep both editing rows on one line on mobile. */
+[class*="st-key-expense_card_"] [data-testid="stHorizontalBlock"] {
+  align-items:center!important;
+}
+[class*="st-key-expense_card_"] input {
+  min-height:2.35rem!important;
+}
+[class*="st-key-expense_card_"] [data-baseweb="select"] > div {
+  min-height:2.35rem!important;
+}
+[class*="st-key-expense_card_"] .stButton button {
+  min-height:2.35rem!important;
+  height:2.35rem!important;
+  padding:.15rem .45rem!important;
+  white-space:nowrap!important;
+}
+[class*="st-key-expense_card_"] [class*="st-key-del_"] button {
+  width:2.35rem!important;
+  min-width:2.35rem!important;
+  padding:0!important;
+  font-size:1.05rem!important;
+}
+
 /* Compact native segmented control: one row, three equal segments. */
 .st-key-top_nav {
   width:100%;
@@ -325,7 +368,7 @@ if view == "สมาชิก":
                 if st.button(
                     "×",
                     key=f"remove_person_{idx}",
-                    type="tertiary",
+                    type="secondary",
                     width=34,
                     help=f"ลบ {person}",
                 ):
@@ -380,44 +423,76 @@ elif view == "รายการ":
         st.info("ยังไม่มีรายการ กด Add expense หรือสแกนใบเสร็จด้านบน")
 
     for idx, item in enumerate(list(st.session_state.expenses)):
-        with st.container(border=True):
-            top_left, top_right = st.columns([4, 1.2])
-            with top_left:
-                st.markdown(
-                    f'<div class="expense-head"><div><div class="expense-name">{html.escape(item.get("name", "รายการ"))}</div>'
-                    f'<div class="pills">{chips(item.get("people", []))}</div></div></div>',
-                    unsafe_allow_html=True,
+        with st.container(border=True, key=f"expense_card_{item['id']}", gap="small"):
+            # Row 1: menu name + price + compact delete button.
+            name_col, price_col, delete_col = st.columns(
+                [2.55, 1.05, 0.42],
+                gap="xsmall",
+                vertical_alignment="center",
+                wrap=False,
+            )
+            with name_col:
+                new_name = st.text_input(
+                    "ชื่อเมนู",
+                    value=item.get("name", ""),
+                    key=f"name_{item['id']}",
+                    label_visibility="collapsed",
+                    placeholder="ชื่อเมนู",
+                    width="stretch",
                 )
-            with top_right:
-                st.markdown(f'<div class="expense-price">{float(item.get("price",0)):,.2f}</div>', unsafe_allow_html=True)
+            with price_col:
+                new_price = st.number_input(
+                    "ราคา",
+                    min_value=0.0,
+                    value=float(item.get("price", 0)),
+                    step=1.0,
+                    key=f"price_{item['id']}",
+                    label_visibility="collapsed",
+                    width="stretch",
+                )
+            with delete_col:
+                delete_clicked = st.button(
+                    "×",
+                    key=f"del_{item['id']}",
+                    type="secondary",
+                    width="stretch",
+                    help="ลบรายการ",
+                )
 
-            e1, e2 = st.columns([3, 1.3])
-            new_name = e1.text_input("รายการ", value=item.get("name", ""), key=f"name_{item['id']}", label_visibility="collapsed")
-            new_price = e2.number_input("ราคา", min_value=0.0, value=float(item.get("price", 0)), step=1.0, key=f"price_{item['id']}", label_visibility="collapsed")
             item["name"] = new_name
             item["price"] = new_price
 
-            selected = st.multiselect(
-                "หารกับ",
-                st.session_state.people,
-                default=[p for p in item.get("people", []) if p in st.session_state.people],
-                key=f"people_{item['id']}",
-                placeholder="เลือกคนที่กิน/ใช้รายการนี้",
-            )
-            item["people"] = selected
-
-
-            c_all, c_del = st.columns([3, 1])
-            c_all.button(
-                "เลือกทุกคน",
-                key=f"all_{item['id']}",
-                use_container_width=True,
-                on_click=select_all_consumers,
-                args=(item["id"],),
-            )
-            if c_del.button("ลบ", key=f"del_{item['id']}", use_container_width=True):
+            if delete_clicked:
                 st.session_state.expenses = [x for x in st.session_state.expenses if x["id"] != item["id"]]
                 st.rerun()
+
+            # Row 2: who shares this item + select-all button.
+            people_col, all_col = st.columns(
+                [2.35, 1.0],
+                gap="xsmall",
+                vertical_alignment="center",
+                wrap=False,
+            )
+            with people_col:
+                selected = st.multiselect(
+                    "หารกัน",
+                    st.session_state.people,
+                    default=[p for p in item.get("people", []) if p in st.session_state.people],
+                    key=f"people_{item['id']}",
+                    placeholder="หารกัน",
+                    label_visibility="collapsed",
+                    width="stretch",
+                )
+            item["people"] = selected
+
+            with all_col:
+                st.button(
+                    "เลือกทุกคน",
+                    key=f"all_{item['id']}",
+                    width="stretch",
+                    on_click=select_all_consumers,
+                    args=(item["id"],),
+                )
 
     if st.button("＋ เพิ่มรายการ", type="primary", use_container_width=True):
         add_expense(consumers=list(st.session_state.people))
