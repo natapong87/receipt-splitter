@@ -40,27 +40,54 @@ header[data-testid="stHeader"] { background:transparent; }
 div[data-testid="stVerticalBlockBorderWrapper"] { border-color:var(--line)!important; border-radius:12px!important; box-shadow:none!important; }
 .stButton button, .stDownloadButton button { border-radius:8px; font-weight:700; }
 .stButton button[kind="primary"], .stDownloadButton button[kind="primary"] { background:var(--blue); border-color:var(--blue); }
-div[role="radiogroup"] {
-  display:grid;
-  grid-template-columns:repeat(3, minmax(0, 1fr));
-  gap:10px;
-  width:min(92%, 560px);
-  margin:0 auto 16px;
-  padding:0 0 10px;
+/* Keep the 3 navigation choices centered on desktop and mobile. */
+div[data-testid="stRadio"] {
+  width:100% !important;
+  display:flex !important;
+  justify-content:center !important;
+  margin:0 auto 16px !important;
+  padding:0 0 10px !important;
   border-bottom:1px solid var(--line);
 }
-div[role="radiogroup"] label {
-  width:100%;
-  justify-content:center;
-  padding:8px 10px 10px;
-  border-radius:10px;
-  text-align:center;
+div[data-testid="stRadio"] > div,
+div[data-testid="stRadio"] div[role="radiogroup"] {
+  width:min(100%, 520px) !important;
+  display:grid !important;
+  grid-template-columns:repeat(3, minmax(0, 1fr)) !important;
+  gap:12px !important;
+  margin:0 auto !important;
+  justify-content:center !important;
 }
+div[data-testid="stRadio"] label {
+  width:100% !important;
+  display:flex !important;
+  justify-content:center !important;
+  align-items:center !important;
+  gap:6px !important;
+  padding:8px 6px 10px !important;
+  margin:0 !important;
+  text-align:center !important;
+}
+.member-row-marker { display:none; }
 .member-name {
   font-weight:800;
   font-size:1rem;
   color:var(--text);
-  padding:.55rem .15rem .45rem;
+  padding:.35rem .1rem;
+  line-height:2.1rem;
+}
+/* Member rows must stay A | X instead of stacking on narrow phones. */
+div[data-testid="stVerticalBlock"]:has(.member-row-marker) div[data-testid="stHorizontalBlock"] {
+  display:grid !important;
+  grid-template-columns:minmax(0, 1fr) 48px !important;
+  gap:8px !important;
+  align-items:center !important;
+  flex-wrap:nowrap !important;
+}
+div[data-testid="stVerticalBlock"]:has(.member-row-marker) div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
+  width:auto !important;
+  min-width:0 !important;
+  flex:unset !important;
 }
 .member-divider {
   height:1px;
@@ -68,8 +95,9 @@ div[role="radiogroup"] label {
   margin:1px 0 4px;
 }
 @media (max-width: 640px) {
-  div[role="radiogroup"] { width:88%; gap:4px; }
-  div[role="radiogroup"] label { padding-left:4px; padding-right:4px; }
+  div[data-testid="stRadio"] { padding-left:10px !important; padding-right:10px !important; }
+  div[data-testid="stRadio"] > div,
+  div[data-testid="stRadio"] div[role="radiogroup"] { gap:6px !important; width:100% !important; }
 }
 [data-testid="stMetric"] { background:var(--soft); padding:10px 12px; border-radius:10px; }
 @media (max-width: 640px) {
@@ -193,7 +221,7 @@ st.markdown('<div class="app-title"><span class="logo-dot">🧾</span><span>Spli
 metric_html = f"""
 <div class="metric-row">
   <div class="metric-card"><div class="metric-label">รายการ</div><div class="metric-value">{len(st.session_state.expenses)}</div></div>
-  <div class="metric-card"><div class="metric-label">Total Price</div><div class="metric-value">{expense_total():,.0f}</div></div>
+  <div class="metric-card"><div class="metric-label">ยอดรวมทั้งหมด</div><div class="metric-value">{expense_total():,.0f}</div></div>
   <div class="metric-card"><div class="metric-label">สมาชิก</div><div class="metric-value">{len(st.session_state.people)}</div></div>
 </div>
 """
@@ -222,6 +250,7 @@ if view == "สมาชิก":
 
     if not st.session_state.people:
         st.info("เพิ่มสมาชิกก่อนเริ่มหารบิล")
+    st.markdown('<div class="member-row-marker"></div>', unsafe_allow_html=True)
     for idx, person in enumerate(list(st.session_state.people)):
         c1, c2 = st.columns([8, 1], vertical_alignment="center")
         c1.markdown(f'<div class="member-name">{html.escape(person)}</div>', unsafe_allow_html=True)
