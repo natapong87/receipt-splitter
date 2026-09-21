@@ -1,4 +1,4 @@
-# Split Bill — mobile-first edition
+# Split Bill — mobile-first edition v8
 
 เว็บหารบิลสำหรับมือถือ: สมาชิก / รายการ / สรุปยอด พร้อมสแกนใบเสร็จด้วย Google Gemini และดาวน์โหลดภาพสรุปภาษาไทยเป็น PNG
 
@@ -61,3 +61,11 @@ GEMINI_MODEL = "gemini-3.8-flash"
 - Member add form stays in one row.
 - Member delete button stays on the same row as the member name on iPhone/Safari.
 - Top metric uses the Thai label `ยอดรวมทั้งหมด`.
+
+
+## v8 compact single-screen mobile layout
+- เปลี่ยนเมนูเป็น `st.segmented_control` แบบกะทัดรัด 3 ช่องในบรรทัดเดียว
+- บังคับแถวเพิ่มสมาชิกและแถวลบสมาชิกด้วย `wrap=False` เพื่อไม่ให้ปุ่มตกบรรทัดบน iPhone
+- ลดความสูงของหัวเว็บ ตัวเลขสรุป เมนู และรายชื่อสมาชิก เพื่อให้สมาชิกเริ่มต้น 3 คนแสดงในหน้าจอเดียวได้มากขึ้น
+- ซ่อนแถบเครื่องมือ Streamlit บนหน้าแอปเพื่อลดพื้นที่แนวตั้ง
+- ต้องใช้ Streamlit 1.64 ขึ้นไป

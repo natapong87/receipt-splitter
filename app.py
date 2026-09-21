@@ -19,16 +19,44 @@ st.markdown(
 <style>
 :root { --blue:#397dcc; --soft:#f7f9fc; --line:#e9edf3; --text:#1c2430; --muted:#788292; }
 [data-testid="stAppViewContainer"] { background:#fff; }
-[data-testid="stMainBlockContainer"] { max-width:760px; padding-top:1.2rem; padding-bottom:6rem; }
-header[data-testid="stHeader"] { background:transparent; }
+[data-testid="stMainBlockContainer"] {
+  max-width:760px;
+  padding-top:.45rem;
+  padding-bottom:1.25rem;
+}
+header[data-testid="stHeader"] { height:0; min-height:0; background:transparent; }
+[data-testid="stToolbar"], [data-testid="stDecoration"], [data-testid="stStatusWidget"] { display:none!important; }
 #MainMenu, footer { visibility:hidden; }
-.app-title { display:flex; align-items:center; gap:.55rem; font-size:1.28rem; font-weight:800; margin:.1rem 0 .65rem; color:var(--text); }
-.logo-dot { width:30px; height:30px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; background:#eaf3ff; color:#2766ad; font-size:17px; }
-.metric-row { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:6px 0 12px; }
-.metric-card { text-align:center; padding:10px 6px 8px; border-radius:12px; background:#fff; }
-.metric-label { color:#9aa2ad; font-size:.76rem; margin-bottom:4px; }
-.metric-value { color:#20242a; font-weight:800; font-size:1.35rem; }
-.section-label { font-size:.82rem; font-weight:800; color:#2c333d; margin:10px 0 4px; }
+.app-title {
+  display:flex;
+  align-items:center;
+  gap:.45rem;
+  font-size:1.15rem;
+  font-weight:800;
+  margin:0 0 .18rem;
+  color:var(--text);
+}
+.logo-dot {
+  width:27px;
+  height:27px;
+  border-radius:50%;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  background:#eaf3ff;
+  color:#2766ad;
+  font-size:15px;
+}
+.metric-row {
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:4px;
+  margin:0 0 .28rem;
+}
+.metric-card { text-align:center; padding:3px 2px 4px; border-radius:9px; background:#fff; }
+.metric-label { color:#9aa2ad; font-size:.69rem; line-height:1.15; margin-bottom:1px; white-space:nowrap; }
+.metric-value { color:#20242a; font-weight:800; font-size:1.08rem; line-height:1.15; }
+.section-label { font-size:.82rem; font-weight:800; color:#2c333d; margin:.3rem 0 .2rem; }
 .expense-head { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
 .expense-name { font-weight:800; font-size:1rem; color:#242a33; }
 .expense-price { font-weight:800; font-size:1rem; white-space:nowrap; }
@@ -40,88 +68,84 @@ header[data-testid="stHeader"] { background:transparent; }
 div[data-testid="stVerticalBlockBorderWrapper"] { border-color:var(--line)!important; border-radius:12px!important; box-shadow:none!important; }
 .stButton button, .stDownloadButton button { border-radius:8px; font-weight:700; }
 .stButton button[kind="primary"], .stDownloadButton button[kind="primary"] { background:var(--blue); border-color:var(--blue); }
-/* Mobile-safe navigation + member rows.  Streamlit normally stacks columns on narrow screens,
-   so these scoped containers explicitly keep only these UI groups on one row. */
-.nav-spacer { height:4px; }
+
+/* Compact native segmented control: one row, three equal segments. */
 .st-key-top_nav {
   width:100%;
-  max-width:640px;
-  margin:0 auto .45rem auto;
-  padding:0 .15rem;
+  max-width:520px;
+  margin:.05rem auto .35rem;
 }
-.st-key-top_nav [data-testid="stHorizontalBlock"],
+.st-key-top_nav [data-testid="stSegmentedControl"] { width:100%!important; }
+.st-key-top_nav [role="radiogroup"] {
+  display:flex!important;
+  flex-wrap:nowrap!important;
+  width:100%!important;
+}
+.st-key-top_nav [role="radio"] {
+  flex:1 1 0!important;
+  min-width:0!important;
+  min-height:2.1rem!important;
+  justify-content:center!important;
+  padding:.18rem .3rem!important;
+  font-size:.88rem!important;
+  white-space:nowrap!important;
+}
+
+/* Compact member controls. Native wrap=False keeps each row on one line. */
 .st-key-member_add [data-testid="stHorizontalBlock"],
 .st-key-member_list [data-testid="stHorizontalBlock"] {
-  display:flex !important;
-  flex-wrap:nowrap !important;
-  width:100% !important;
-  align-items:center !important;
+  align-items:center!important;
 }
-.st-key-top_nav [data-testid="column"] {
-  flex:1 1 0 !important;
-  width:0 !important;
-  min-width:0 !important;
-}
-.st-key-top_nav .stButton button {
-  min-height:2.75rem;
-  white-space:nowrap !important;
-  padding-left:.35rem !important;
-  padding-right:.35rem !important;
-}
-.st-key-member_add [data-testid="column"]:first-child {
-  flex:1 1 auto !important;
-  width:auto !important;
-  min-width:0 !important;
-}
-.st-key-member_add [data-testid="column"]:last-child {
-  flex:0 0 84px !important;
-  width:84px !important;
-  min-width:84px !important;
-}
+.st-key-member_add input { min-height:2.25rem!important; height:2.25rem!important; }
 .st-key-member_add .stButton button {
-  min-height:2.75rem;
+  min-height:2.25rem!important;
+  height:2.25rem!important;
+  padding:.15rem .55rem!important;
 }
-.st-key-member_list [data-testid="column"]:first-child {
-  flex:1 1 auto !important;
-  width:auto !important;
-  min-width:0 !important;
-}
-.st-key-member_list [data-testid="column"]:last-child {
-  flex:0 0 46px !important;
-  width:46px !important;
-  min-width:46px !important;
-}
+.st-key-member_list [data-testid="stVerticalBlock"] { gap:0!important; }
 .st-key-member_list .stButton button {
-  width:42px !important;
-  min-width:42px !important;
-  height:42px !important;
-  min-height:42px !important;
-  padding:0 !important;
-  border-radius:10px !important;
-  font-size:1.15rem !important;
-  line-height:1 !important;
+  width:34px!important;
+  min-width:34px!important;
+  height:34px!important;
+  min-height:34px!important;
+  padding:0!important;
+  border-radius:8px!important;
+  font-size:1.05rem!important;
+  line-height:1!important;
 }
 .member-name {
   display:flex;
   align-items:center;
-  min-height:42px;
+  min-height:34px;
   font-weight:800;
-  font-size:1rem;
+  font-size:.98rem;
   color:var(--text);
-  line-height:1.15;
-  padding-left:.15rem;
+  line-height:1.1;
+  padding-left:.1rem;
 }
-.member-divider {
-  height:1px;
-  background:var(--line);
-  margin:3px 0 5px;
+.member-divider { height:1px; background:var(--line); margin:0; }
+.st-key-clear_members { margin-top:.15rem; text-align:center; }
+.st-key-clear_members .stButton button {
+  min-height:2rem!important;
+  padding:.1rem .55rem!important;
+  font-size:.82rem!important;
 }
-[data-testid="stMetric"] { background:var(--soft); padding:10px 12px; border-radius:10px; }
-@media (max-width: 640px) {
-  [data-testid="stMainBlockContainer"] { padding-left:.8rem; padding-right:.8rem; padding-top:.65rem; }
-  .metric-value { font-size:1.18rem; }
-  .metric-card { padding:8px 2px; }
-  div[data-testid="column"] { min-width:0!important; }
+[data-testid="stMetric"] { background:var(--soft); padding:8px 10px; border-radius:10px; }
+
+@media (max-width:640px) {
+  [data-testid="stMainBlockContainer"] {
+    padding-left:.62rem;
+    padding-right:.62rem;
+    padding-top:.22rem;
+    padding-bottom:.75rem;
+  }
+  .app-title { font-size:1.08rem; margin-bottom:.1rem; }
+  .logo-dot { width:25px; height:25px; font-size:14px; }
+  .metric-row { margin-bottom:.18rem; }
+  .metric-label { font-size:.66rem; }
+  .metric-value { font-size:1rem; }
+  .st-key-top_nav { margin-bottom:.25rem; }
+  .section-label { margin-top:.2rem; }
 }
 </style>
 """,
@@ -244,32 +268,41 @@ metric_html = f"""
 """
 st.markdown(metric_html, unsafe_allow_html=True)
 
-with st.container(key="top_nav"):
-    nav_1, nav_2, nav_3 = st.columns(3, gap="small", vertical_alignment="center")
-    with nav_1:
-        if st.button("สมาชิก", key="nav_members", use_container_width=True, type="primary" if st.session_state.active_view == "สมาชิก" else "secondary"):
-            st.session_state.active_view = "สมาชิก"
-            st.rerun()
-    with nav_2:
-        if st.button("รายการ", key="nav_expenses", use_container_width=True, type="primary" if st.session_state.active_view == "รายการ" else "secondary"):
-            st.session_state.active_view = "รายการ"
-            st.rerun()
-    with nav_3:
-        if st.button("สรุป", key="nav_summary", use_container_width=True, type="primary" if st.session_state.active_view == "สรุป" else "secondary"):
-            st.session_state.active_view = "สรุป"
-            st.rerun()
-st.markdown('<div class="nav-spacer"></div>', unsafe_allow_html=True)
-view = st.session_state.active_view
+with st.container(key="top_nav", gap=None):
+    selected_view = st.segmented_control(
+        "เมนูหลัก",
+        options=["สมาชิก", "รายการ", "สรุป"],
+        selection_mode="single",
+        default=st.session_state.active_view,
+        key="top_nav_choice",
+        label_visibility="collapsed",
+        width="stretch",
+        wrap=False,
+    )
+
+view = selected_view or st.session_state.active_view
+st.session_state.active_view = view
 
 if view == "สมาชิก":
     st.markdown('<div class="section-label">สมาชิก</div>', unsafe_allow_html=True)
 
-    with st.container(key="member_add"):
-        add_col, btn_col = st.columns([1, 0.18], gap="small", vertical_alignment="center")
+    with st.container(key="member_add", gap=None):
+        add_col, btn_col = st.columns(
+            [1, 0.22],
+            gap="xsmall",
+            vertical_alignment="center",
+            wrap=False,
+        )
         with add_col:
-            new_member = st.text_input("ชื่อสมาชิก", placeholder="เช่น Nat", label_visibility="collapsed", key="new_member")
+            new_member = st.text_input(
+                "ชื่อสมาชิก",
+                placeholder="เช่น Nat",
+                label_visibility="collapsed",
+                key="new_member",
+                width="stretch",
+            )
         with btn_col:
-            if st.button("เพิ่ม", type="primary", use_container_width=True, key="add_member"):
+            if st.button("เพิ่ม", type="primary", width="stretch", key="add_member"):
                 name = new_member.strip()
                 if name and name not in st.session_state.people:
                     st.session_state.people.append(name)
@@ -279,13 +312,27 @@ if view == "สมาชิก":
     if not st.session_state.people:
         st.info("เพิ่มสมาชิกก่อนเริ่มหารบิล")
 
-    with st.container(key="member_list"):
+    with st.container(key="member_list", gap=None):
         for idx, person in enumerate(list(st.session_state.people)):
-            c1, c2 = st.columns([1, 0.08], gap="small", vertical_alignment="center")
-            with c1:
-                st.markdown(f'<div class="member-name">{html.escape(person)}</div>', unsafe_allow_html=True)
-            with c2:
-                if st.button("×", key=f"remove_person_{idx}", use_container_width=False, help=f"ลบ {person}"):
+            name_col, delete_col = st.columns(
+                [1, 0.08],
+                gap="xsmall",
+                vertical_alignment="center",
+                wrap=False,
+            )
+            with name_col:
+                st.markdown(
+                    f'<div class="member-name">{html.escape(person)}</div>',
+                    unsafe_allow_html=True,
+                )
+            with delete_col:
+                if st.button(
+                    "×",
+                    key=f"remove_person_{idx}",
+                    type="tertiary",
+                    width=34,
+                    help=f"ลบ {person}",
+                ):
                     st.session_state.people.remove(person)
                     for item in st.session_state.expenses:
                         item["people"] = [p for p in item.get("people", []) if p != person]
@@ -294,12 +341,14 @@ if view == "สมาชิก":
                     st.rerun()
             st.markdown('<div class="member-divider"></div>', unsafe_allow_html=True)
 
-    if st.session_state.people and st.button("ล้างสมาชิกทั้งหมด", use_container_width=True):
-        st.session_state.people = []
-        for item in st.session_state.expenses:
-            item["people"] = []
-            item["payer"] = ""
-        st.rerun()
+    if st.session_state.people:
+        with st.container(key="clear_members", horizontal=True, horizontal_alignment="center", gap=None):
+            if st.button("ล้างสมาชิกทั้งหมด", type="tertiary", width="content"):
+                st.session_state.people = []
+                for item in st.session_state.expenses:
+                    item["people"] = []
+                    item["payer"] = ""
+                st.rerun()
 
 elif view == "รายการ":
     st.markdown('<div class="section-label">รายการ</div>', unsafe_allow_html=True)
