@@ -132,11 +132,7 @@ div[data-testid="stVerticalBlockBorderWrapper"] { border-color:var(--line)!impor
   white-space:nowrap!important;
 }
 
-/* Compact member controls. Native wrap=False keeps each row on one line. */
-.st-key-member_add [data-testid="stHorizontalBlock"],
-.st-key-member_list [data-testid="stHorizontalBlock"] {
-  align-items:center!important;
-}
+/* Compact member controls. Use native horizontal containers instead of columns. */
 .st-key-member_add input {
   min-height:2.25rem!important;
   height:2.25rem!important;
@@ -145,32 +141,54 @@ div[data-testid="stVerticalBlockBorderWrapper"] { border-color:var(--line)!impor
 }
 .st-key-member_add [data-testid="stTextInput"] {
   overflow:visible!important;
+  flex:1 1 auto!important;
+  min-width:0!important;
 }
-
 .st-key-member_add .stButton button {
   min-height:2.25rem!important;
   height:2.25rem!important;
-  padding:.15rem .55rem!important;
+  padding:.15rem .75rem!important;
+}
+
+/* Member list must never become an internal scroll area. */
+.st-key-member_list,
+.st-key-member_list > div,
+.st-key-member_list [data-testid="stVerticalBlock"],
+.st-key-member_list [data-testid="stHorizontalBlock"] {
+  overflow:visible!important;
+  max-height:none!important;
+  height:auto!important;
 }
 .st-key-member_list [data-testid="stVerticalBlock"] { gap:0!important; }
-.st-key-member_list [data-testid="stHorizontalBlock"] {
-  min-height:32px!important;
-  height:32px!important;
+[class*="st-key-member_row_"] {
+  min-height:30px!important;
+  height:30px!important;
+  overflow:visible!important;
 }
-.st-key-member_list .stButton {
+[class*="st-key-member_row_"] [data-testid="stHorizontalBlock"] {
+  min-height:30px!important;
+  height:30px!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  flex-wrap:nowrap!important;
+  overflow:visible!important;
+}
+[class*="st-key-member_row_"] .stButton {
   margin:0!important;
   padding:0!important;
+  flex:0 0 26px!important;
 }
-.st-key-member_list .stButton button {
-  width:28px!important;
-  min-width:28px!important;
-  height:28px!important;
-  min-height:28px!important;
-  max-height:28px!important;
+[class*="st-key-member_row_"] .stButton button {
+  width:26px!important;
+  min-width:26px!important;
+  max-width:26px!important;
+  height:26px!important;
+  min-height:26px!important;
+  max-height:26px!important;
   padding:0!important;
   margin:0!important;
-  border-radius:7px!important;
-  font-size:.95rem!important;
+  border-radius:6px!important;
+  font-size:.88rem!important;
   line-height:1!important;
   display:flex!important;
   align-items:center!important;
@@ -179,21 +197,14 @@ div[data-testid="stVerticalBlockBorderWrapper"] { border-color:var(--line)!impor
 .member-name {
   display:flex;
   align-items:center;
-  min-height:28px;
-  height:28px;
+  min-height:26px;
+  height:26px;
   font-weight:800;
-  font-size:.98rem;
+  font-size:.93rem;
   color:var(--text);
   line-height:1;
   padding-left:.1rem;
-}
-.st-key-member_list {
-  overflow:visible!important;
-  max-height:none!important;
-}
-.st-key-member_list [data-testid="stVerticalBlock"] {
-  overflow:visible!important;
-  max-height:none!important;
+  white-space:nowrap;
 }
 .member-divider { height:1px; background:var(--line); margin:0; }
 .st-key-clear_members { margin-top:.15rem; text-align:center; }
@@ -384,23 +395,22 @@ if view == "สมาชิก":
 
     with st.container(key="member_list", gap=None):
         for idx, person in enumerate(list(st.session_state.people)):
-            name_col, delete_col = st.columns(
-                [1, 0.055],
-                gap="xsmall",
+            with st.container(
+                key=f"member_row_{idx}",
+                horizontal=True,
+                horizontal_alignment="distribute",
                 vertical_alignment="center",
-                wrap=False,
-            )
-            with name_col:
+                gap=None,
+            ):
                 st.markdown(
                     f'<div class="member-name">{html.escape(person)}</div>',
                     unsafe_allow_html=True,
                 )
-            with delete_col:
                 if st.button(
                     "×",
                     key=f"remove_person_{idx}",
                     type="secondary",
-                    width=28,
+                    width=26,
                     help=f"ลบ {person}",
                 ):
                     st.session_state.people.remove(person)

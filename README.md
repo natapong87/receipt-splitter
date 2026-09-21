@@ -1,3 +1,7 @@
+# Receipt Splitter Mobile UI v13
+
+ปรับหน้าสมาชิกบนมือถือใหม่โดยใช้ horizontal container จริงแทน `st.columns` เพื่อให้ชื่อและปุ่มลบอยู่บรรทัดเดียวกันแน่นอน และป้องกัน member list กลายเป็นพื้นที่ scroll ภายใน.
+
 ## Mobile UI v11
 
 - ปุ่มลบสมาชิกเป็นปุ่มสีแดง กากบาทสีขาว
