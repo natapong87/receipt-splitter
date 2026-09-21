@@ -91,3 +91,8 @@ GEMINI_MODEL = "gemini-3.8-flash"
 - ชื่อร้าน ชื่อสมาชิก หรือชื่อรายการที่เป็นภาษาอังกฤษจะคงชื่อเดิม
 - ข้อความที่มีภาษาไทยในภาพจะถูกแทนด้วยชื่อที่อ่านได้ เช่น `Shared meal`, `Member 1` และ `Item 1` เพื่อไม่ให้เกิดสี่เหลี่ยมแทนตัวอักษร
 - หน้าเว็บหลักยังคงเป็นภาษาไทยเหมือนเดิม
+
+
+## v12
+- Compact 28px red member delete buttons aligned to each row.
+- Member list/input no longer uses internal vertical scrolling.

@@ -137,32 +137,63 @@ div[data-testid="stVerticalBlockBorderWrapper"] { border-color:var(--line)!impor
 .st-key-member_list [data-testid="stHorizontalBlock"] {
   align-items:center!important;
 }
-.st-key-member_add input { min-height:2.25rem!important; height:2.25rem!important; }
+.st-key-member_add input {
+  min-height:2.25rem!important;
+  height:2.25rem!important;
+  overflow:hidden!important;
+  resize:none!important;
+}
+.st-key-member_add [data-testid="stTextInput"] {
+  overflow:visible!important;
+}
+
 .st-key-member_add .stButton button {
   min-height:2.25rem!important;
   height:2.25rem!important;
   padding:.15rem .55rem!important;
 }
 .st-key-member_list [data-testid="stVerticalBlock"] { gap:0!important; }
-.st-key-member_list .stButton button {
-  width:34px!important;
-  min-width:34px!important;
-  height:34px!important;
-  min-height:34px!important;
+.st-key-member_list [data-testid="stHorizontalBlock"] {
+  min-height:32px!important;
+  height:32px!important;
+}
+.st-key-member_list .stButton {
+  margin:0!important;
   padding:0!important;
-  border-radius:8px!important;
-  font-size:1.05rem!important;
+}
+.st-key-member_list .stButton button {
+  width:28px!important;
+  min-width:28px!important;
+  height:28px!important;
+  min-height:28px!important;
+  max-height:28px!important;
+  padding:0!important;
+  margin:0!important;
+  border-radius:7px!important;
+  font-size:.95rem!important;
   line-height:1!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
 }
 .member-name {
   display:flex;
   align-items:center;
-  min-height:34px;
+  min-height:28px;
+  height:28px;
   font-weight:800;
   font-size:.98rem;
   color:var(--text);
-  line-height:1.1;
+  line-height:1;
   padding-left:.1rem;
+}
+.st-key-member_list {
+  overflow:visible!important;
+  max-height:none!important;
+}
+.st-key-member_list [data-testid="stVerticalBlock"] {
+  overflow:visible!important;
+  max-height:none!important;
 }
 .member-divider { height:1px; background:var(--line); margin:0; }
 .st-key-clear_members { margin-top:.15rem; text-align:center; }
@@ -354,7 +385,7 @@ if view == "สมาชิก":
     with st.container(key="member_list", gap=None):
         for idx, person in enumerate(list(st.session_state.people)):
             name_col, delete_col = st.columns(
-                [1, 0.08],
+                [1, 0.055],
                 gap="xsmall",
                 vertical_alignment="center",
                 wrap=False,
@@ -369,7 +400,7 @@ if view == "สมาชิก":
                     "×",
                     key=f"remove_person_{idx}",
                     type="secondary",
-                    width=34,
+                    width=28,
                     help=f"ลบ {person}",
                 ):
                     st.session_state.people.remove(person)
