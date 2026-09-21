@@ -4,6 +4,7 @@ import base64
 import json
 import os
 import re
+import time
 from typing import Any
 
 from dotenv import load_dotenv
@@ -121,6 +122,11 @@ def _should_try_next_model(exc: Exception) -> bool:
             "model is no longer available",
             "model not found",
             "unsupported model",
+            "503",
+            "unavailable",
+            "high demand",
+            "429",
+            "resource_exhausted",
         )
     )
 
@@ -175,6 +181,9 @@ def parse_receipt_image(image_bytes: bytes, mime_type: str) -> dict[str, Any]:
             return parsed
         except Exception as exc:
             errors.append(f"{model}: {exc}")
+            text = str(exc).lower()
+            if any(marker in text for marker in ("503", "unavailable", "high demand", "429", "resource_exhausted")):
+                time.sleep(1.2)
             if not _should_try_next_model(exc):
                 raise RuntimeError(f"Gemini API error ({model}): {exc}") from exc
 
