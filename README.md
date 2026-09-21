@@ -34,7 +34,7 @@ GEMINI_MODEL = "gemini-3.8-flash"
 
 ## Main features
 
-- Mobile-first layout แบบ Member / Expense / Summary
+- Mobile-first layout แบบ สมาชิก / รายการ / สรุป
 - Top metrics: จำนวนรายการ / ยอดรวม / จำนวนสมาชิก
 - สแกนใบเสร็จด้วย Gemini
 - รายการ x2/x3 ถูกแยกเป็นคนละรายการ

@@ -40,8 +40,24 @@ header[data-testid="stHeader"] { background:transparent; }
 div[data-testid="stVerticalBlockBorderWrapper"] { border-color:var(--line)!important; border-radius:12px!important; box-shadow:none!important; }
 .stButton button, .stDownloadButton button { border-radius:8px; font-weight:700; }
 .stButton button[kind="primary"], .stDownloadButton button[kind="primary"] { background:var(--blue); border-color:var(--blue); }
-div[role="radiogroup"] { display:flex; justify-content:center; gap:0; border-bottom:1px solid var(--line); margin-bottom:10px; }
-div[role="radiogroup"] label { flex:1; justify-content:center; padding:7px 4px 10px; }
+div[role="radiogroup"] {
+  display:grid;
+  grid-template-columns:repeat(3, minmax(0, 1fr));
+  gap:8px;
+  border-bottom:1px solid var(--line);
+  margin:0 18px 12px;
+  padding:0 8px 8px;
+}
+div[role="radiogroup"] label {
+  width:100%;
+  justify-content:center;
+  padding:8px 12px 10px;
+  border-radius:10px;
+}
+@media (max-width: 640px) {
+  div[role="radiogroup"] { margin-left:8px; margin-right:8px; gap:6px; padding-left:4px; padding-right:4px; }
+  div[role="radiogroup"] label { padding-left:8px; padding-right:8px; }
+}
 [data-testid="stMetric"] { background:var(--soft); padding:10px 12px; border-radius:10px; }
 @media (max-width: 640px) {
   [data-testid="stMainBlockContainer"] { padding-left:.8rem; padding-right:.8rem; padding-top:.65rem; }
@@ -64,7 +80,7 @@ def init_state():
         "vat": 0.0,
         "discount": 0.0,
         "receipt_total": 0.0,
-        "active_view": "Expense",
+        "active_view": "รายการ",
         "receipt_hash": None,
     }
     for key, value in defaults.items():
@@ -163,28 +179,28 @@ st.markdown('<div class="app-title"><span class="logo-dot">🧾</span><span>Spli
 
 metric_html = f"""
 <div class="metric-row">
-  <div class="metric-card"><div class="metric-label">Expense</div><div class="metric-value">{len(st.session_state.expenses)}</div></div>
+  <div class="metric-card"><div class="metric-label">รายการ</div><div class="metric-value">{len(st.session_state.expenses)}</div></div>
   <div class="metric-card"><div class="metric-label">Total Price</div><div class="metric-value">{expense_total():,.0f}</div></div>
-  <div class="metric-card"><div class="metric-label">Member</div><div class="metric-value">{len(st.session_state.people)}</div></div>
+  <div class="metric-card"><div class="metric-label">สมาชิก</div><div class="metric-value">{len(st.session_state.people)}</div></div>
 </div>
 """
 st.markdown(metric_html, unsafe_allow_html=True)
 
 view = st.radio(
     "Navigation",
-    ["Member", "Expense", "Summary"],
+    ["สมาชิก", "รายการ", "สรุป"],
     horizontal=True,
     label_visibility="collapsed",
     key="active_view",
 )
 
-if view == "Member":
-    st.markdown('<div class="section-label">Member</div>', unsafe_allow_html=True)
+if view == "สมาชิก":
+    st.markdown('<div class="section-label">สมาชิก</div>', unsafe_allow_html=True)
     add_col, btn_col = st.columns([4, 1])
     with add_col:
         new_member = st.text_input("ชื่อสมาชิก", placeholder="เช่น Nat", label_visibility="collapsed", key="new_member")
     with btn_col:
-        if st.button("Add", type="primary", use_container_width=True):
+        if st.button("เพิ่ม", type="primary", use_container_width=True):
             name = new_member.strip()
             if name and name not in st.session_state.people:
                 st.session_state.people.append(name)
@@ -205,25 +221,25 @@ if view == "Member":
                         item["payer"] = ""
                 st.rerun()
 
-    if st.session_state.people and st.button("Clear all members", use_container_width=True):
+    if st.session_state.people and st.button("ล้างสมาชิกทั้งหมด", use_container_width=True):
         st.session_state.people = []
         for item in st.session_state.expenses:
             item["people"] = []
             item["payer"] = ""
         st.rerun()
 
-elif view == "Expense":
-    st.markdown('<div class="section-label">Expense</div>', unsafe_allow_html=True)
+elif view == "รายการ":
+    st.markdown('<div class="section-label">รายการ</div>', unsafe_allow_html=True)
 
     with st.expander("📷 สแกนใบเสร็จด้วย Gemini", expanded=not st.session_state.expenses):
         merchant = st.text_input("ชื่อร้าน", value=st.session_state.merchant, placeholder="ชื่อร้าน (ถ้ามี)")
         st.session_state.merchant = merchant
-        col_up, col_cam = st.columns(2)
-        with col_up:
-            uploaded = st.file_uploader("อัปโหลด JPG / PNG", type=["jpg", "jpeg", "png"], key="receipt_upload")
-        with col_cam:
-            camera = st.camera_input("ถ่ายรูปใบเสร็จ", key="receipt_camera")
-        image_file = camera or uploaded
+        uploaded = st.file_uploader(
+            "อัปโหลดรูปใบเสร็จ JPG / PNG",
+            type=["jpg", "jpeg", "png"],
+            key="receipt_upload",
+        )
+        image_file = uploaded
         if image_file:
             image_bytes = image_file.getvalue()
             file_hash = hashlib.sha256(image_bytes).hexdigest()
@@ -294,17 +310,17 @@ elif view == "Expense":
                 st.session_state.expenses = [x for x in st.session_state.expenses if x["id"] != item["id"]]
                 st.rerun()
 
-    if st.button("＋ Add expense", type="primary", use_container_width=True):
+    if st.button("＋ เพิ่มรายการ", type="primary", use_container_width=True):
         add_expense(consumers=list(st.session_state.people))
         st.rerun()
 
     if st.session_state.expenses:
-        if st.button("Clear All", use_container_width=True):
+        if st.button("ล้างรายการทั้งหมด", use_container_width=True):
             st.session_state.expenses = []
             st.rerun()
 
 else:
-    st.markdown('<div class="section-label">Summary</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-label">สรุป</div>', unsafe_allow_html=True)
     if not st.session_state.expenses:
         st.info("ยังไม่มีรายการสำหรับสรุป")
     else:
