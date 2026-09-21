@@ -40,64 +40,18 @@ header[data-testid="stHeader"] { background:transparent; }
 div[data-testid="stVerticalBlockBorderWrapper"] { border-color:var(--line)!important; border-radius:12px!important; box-shadow:none!important; }
 .stButton button, .stDownloadButton button { border-radius:8px; font-weight:700; }
 .stButton button[kind="primary"], .stDownloadButton button[kind="primary"] { background:var(--blue); border-color:var(--blue); }
-/* Keep the 3 navigation choices centered on desktop and mobile. */
-div[data-testid="stRadio"] {
-  width:100% !important;
-  display:flex !important;
-  justify-content:center !important;
-  margin:0 auto 16px !important;
-  padding:0 0 10px !important;
-  border-bottom:1px solid var(--line);
-}
-div[data-testid="stRadio"] > div,
-div[data-testid="stRadio"] div[role="radiogroup"] {
-  width:min(100%, 520px) !important;
-  display:grid !important;
-  grid-template-columns:repeat(3, minmax(0, 1fr)) !important;
-  gap:12px !important;
-  margin:0 auto !important;
-  justify-content:center !important;
-}
-div[data-testid="stRadio"] label {
-  width:100% !important;
-  display:flex !important;
-  justify-content:center !important;
-  align-items:center !important;
-  gap:6px !important;
-  padding:8px 6px 10px !important;
-  margin:0 !important;
-  text-align:center !important;
-}
-.member-row-marker { display:none; }
+/* Navigation is rendered with three real buttons, avoiding radio wrapping on iPhone. */
+.nav-spacer { height:2px; }
 .member-name {
   font-weight:800;
   font-size:1rem;
   color:var(--text);
-  padding:.35rem .1rem;
-  line-height:2.1rem;
-}
-/* Member rows must stay A | X instead of stacking on narrow phones. */
-div[data-testid="stVerticalBlock"]:has(.member-row-marker) div[data-testid="stHorizontalBlock"] {
-  display:grid !important;
-  grid-template-columns:minmax(0, 1fr) 48px !important;
-  gap:8px !important;
-  align-items:center !important;
-  flex-wrap:nowrap !important;
-}
-div[data-testid="stVerticalBlock"]:has(.member-row-marker) div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
-  width:auto !important;
-  min-width:0 !important;
-  flex:unset !important;
+  line-height:2.4rem;
 }
 .member-divider {
   height:1px;
   background:var(--line);
-  margin:1px 0 4px;
-}
-@media (max-width: 640px) {
-  div[data-testid="stRadio"] { padding-left:10px !important; padding-right:10px !important; }
-  div[data-testid="stRadio"] > div,
-  div[data-testid="stRadio"] div[role="radiogroup"] { gap:6px !important; width:100% !important; }
+  margin:2px 0 6px;
 }
 [data-testid="stMetric"] { background:var(--soft); padding:10px 12px; border-radius:10px; }
 @media (max-width: 640px) {
@@ -227,21 +181,29 @@ metric_html = f"""
 """
 st.markdown(metric_html, unsafe_allow_html=True)
 
-view = st.radio(
-    "Navigation",
-    ["สมาชิก", "รายการ", "สรุป"],
-    horizontal=True,
-    label_visibility="collapsed",
-    key="active_view",
-)
+nav_pad_l, nav_1, nav_2, nav_3, nav_pad_r = st.columns([0.20, 1, 1, 1, 0.20], gap="small")
+with nav_1:
+    if st.button("สมาชิก", key="nav_members", use_container_width=True, type="primary" if st.session_state.active_view == "สมาชิก" else "secondary"):
+        st.session_state.active_view = "สมาชิก"
+        st.rerun()
+with nav_2:
+    if st.button("รายการ", key="nav_expenses", use_container_width=True, type="primary" if st.session_state.active_view == "รายการ" else "secondary"):
+        st.session_state.active_view = "รายการ"
+        st.rerun()
+with nav_3:
+    if st.button("สรุป", key="nav_summary", use_container_width=True, type="primary" if st.session_state.active_view == "สรุป" else "secondary"):
+        st.session_state.active_view = "สรุป"
+        st.rerun()
+st.markdown('<div class="nav-spacer"></div>', unsafe_allow_html=True)
+view = st.session_state.active_view
 
 if view == "สมาชิก":
     st.markdown('<div class="section-label">สมาชิก</div>', unsafe_allow_html=True)
-    add_col, btn_col = st.columns([4, 1])
+    add_col, btn_col = st.columns([4.5, 1.25], gap="small", vertical_alignment="center")
     with add_col:
         new_member = st.text_input("ชื่อสมาชิก", placeholder="เช่น Nat", label_visibility="collapsed", key="new_member")
     with btn_col:
-        if st.button("เพิ่ม", type="primary", use_container_width=True):
+        if st.button("เพิ่ม", type="primary", use_container_width=True, key="add_member"):
             name = new_member.strip()
             if name and name not in st.session_state.people:
                 st.session_state.people.append(name)
@@ -250,17 +212,18 @@ if view == "สมาชิก":
 
     if not st.session_state.people:
         st.info("เพิ่มสมาชิกก่อนเริ่มหารบิล")
-    st.markdown('<div class="member-row-marker"></div>', unsafe_allow_html=True)
     for idx, person in enumerate(list(st.session_state.people)):
-        c1, c2 = st.columns([8, 1], vertical_alignment="center")
-        c1.markdown(f'<div class="member-name">{html.escape(person)}</div>', unsafe_allow_html=True)
-        if c2.button("✕", key=f"remove_person_{idx}", use_container_width=True):
-            st.session_state.people.remove(person)
-            for item in st.session_state.expenses:
-                item["people"] = [p for p in item.get("people", []) if p != person]
-                if item.get("payer") == person:
-                    item["payer"] = ""
-            st.rerun()
+        c1, c2 = st.columns([8.5, 1.2], gap="small", vertical_alignment="center")
+        with c1:
+            st.markdown(f'<div class="member-name">{html.escape(person)}</div>', unsafe_allow_html=True)
+        with c2:
+            if st.button("×", key=f"remove_person_{idx}", use_container_width=True, help=f"ลบ {person}"):
+                st.session_state.people.remove(person)
+                for item in st.session_state.expenses:
+                    item["people"] = [p for p in item.get("people", []) if p != person]
+                    if item.get("payer") == person:
+                        item["payer"] = ""
+                st.rerun()
         st.markdown('<div class="member-divider"></div>', unsafe_allow_html=True)
 
     if st.session_state.people and st.button("ล้างสมาชิกทั้งหมด", use_container_width=True):
