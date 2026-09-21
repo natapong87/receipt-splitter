@@ -1,28 +1,23 @@
-# Receipt Splitter — Google Gemini Edition
+# Receipt Splitter — Gemini / Mobile Deploy Edition
 
-เว็บแอป Streamlit สำหรับอ่านใบเสร็จร้านอาหารด้วย **Google Gemini API** แล้วระบุว่าใครกินเมนูใดบ้าง ก่อนคำนวณยอดที่แต่ละคนต้องจ่าย
+เว็บแอป Streamlit สำหรับอ่านใบเสร็จร้านอาหารด้วย Google Gemini แล้วระบุว่าใครกินเมนูใดบ้าง ก่อนคำนวณยอดที่แต่ละคนต้องจ่าย
 
-## ฟีเจอร์
+## จุดเด่นของเวอร์ชันนี้
 
-- อัปโหลดรูปหรือถ่ายรูปใบเสร็จจากกล้อง
-- Google Gemini อ่านชื่อร้าน เมนู จำนวน ราคาต่อหน่วย Service charge, VAT, ส่วนลด และยอดรวม
-- ตรวจและแก้ข้อมูลด้วยมือก่อนคำนวณ
-- เมนูเดียวกันที่สั่งหลายชิ้นถูกแยกเป็น `#1`, `#2`, ... เพื่อให้ระบุคนกินแต่ละครั้งต่างกันได้
+- ใช้ Google Gemini **Interactions API**
+- ค่าเริ่มต้น `gemini-3.8-flash`
+- ถ้าโมเดลที่ตั้งไว้ตอบ 404 แอปจะลอง fallback model ให้อัตโนมัติ
+- ใช้ได้ทั้ง local `.env` และ Streamlit Community Cloud `Secrets`
+- อัปโหลดรูปหรือถ่ายรูปใบเสร็จจากมือถือ
+- แยกเมนู `x2`, `x3` เป็น #1, #2, #3 เพื่อระบุคนกินต่างกันได้
 - เมนูหนึ่งแชร์กันหลายคนได้
-- Service/VAT/ส่วนลด กระจายตามสัดส่วนค่าอาหารของแต่ละคน
-- ปัดเศษระดับสตางค์โดยรักษายอดรวม
-- ดาวน์โหลดผลลัพธ์เป็น JSON
-- มีโหมดกรอกเองแม้ไม่ใช้ Gemini API
+- Service / VAT / ส่วนลด กระจายตามสัดส่วนค่าอาหาร
+- ตรวจยอดรวมกับยอดบนใบเสร็จ
+- มีโหมดกรอกเอง แม้ไม่ใช้ AI
 
-## 1. สร้าง Google Gemini API key
+## รันบนคอม
 
-สร้าง API key ใน Google AI Studio แล้วเก็บ key ไว้เป็นความลับ ห้าม commit ลง GitHub
-
-โปรแกรมรองรับตัวแปร `GEMINI_API_KEY` และ `GOOGLE_API_KEY` โดยแนะนำให้ใช้ `GEMINI_API_KEY`
-
-## 2. ติดตั้ง
-
-ต้องมี Python 3.10+ แนะนำ Python 3.11 หรือ 3.12
+ต้องมี Python 3.10+ (แนะนำ 3.11 หรือ 3.12)
 
 ### Windows PowerShell
 
@@ -30,71 +25,53 @@
 cd receipt-splitter
 python -m venv .venv
 .venv\Scripts\Activate.ps1
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 Copy-Item .env.example .env
 notepad .env
 python -m streamlit run app.py
 ```
 
-แก้ `.env` เป็น:
+ใน `.env` ใส่:
 
 ```env
-GEMINI_API_KEY=ใส่_api_key_ของคุณตรงนี้
-GEMINI_MODEL=gemini-2.5-flash
-```
-
-### macOS / Linux
-
-```bash
-cd receipt-splitter
-python3 -m venv .venv
-. .venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env
-```
-
-แก้ `.env` แล้วรัน:
-
-```bash
-python -m streamlit run app.py
+GEMINI_API_KEY=ใส่_google_ai_studio_api_key_ตรงนี้
+GEMINI_MODEL=gemini-3.8-flash
 ```
 
 จากนั้นเปิด URL ที่ Streamlit แสดง โดยทั่วไปคือ `http://localhost:8501`
 
-## ตั้ง key ผ่าน Environment Variable แทน .env
+## Deploy ให้คนอื่นใช้บนมือถือด้วย Streamlit Community Cloud
 
-Windows PowerShell:
+1. สร้าง GitHub repository แล้ว push ไฟล์ในโฟลเดอร์นี้ขึ้นไป
+2. **ห้าม upload `.env`** — โปรเจกต์นี้ใส่ `.env` ใน `.gitignore` แล้ว
+3. เข้า Streamlit Community Cloud และเลือก repository
+4. Main file path: `app.py`
+5. ใน **Advanced settings / Secrets** ใส่:
 
-```powershell
-$env:GEMINI_API_KEY="YOUR_GOOGLE_API_KEY"
-python -m streamlit run app.py
+```toml
+GEMINI_API_KEY = "ใส่_key_ของคุณ"
+GEMINI_MODEL = "gemini-3.8-flash"
 ```
 
-macOS / Linux:
+6. Deploy แล้วส่ง URL `https://...streamlit.app` ให้เพื่อนได้เลย
 
-```bash
-export GEMINI_API_KEY="YOUR_GOOGLE_API_KEY"
-python -m streamlit run app.py
-```
+> ผู้ใช้ปลายทางไม่ต้องมี Python และไม่ต้องมี Gemini API key ของตัวเอง เพราะ API ถูกเรียกฝั่ง server ด้วย Secret ของผู้ deploy
 
-## เปลี่ยนโมเดล
+## ถ้า model ใช้งานไม่ได้
 
-ค่าเริ่มต้นคือ `gemini-2.5-flash` และเปลี่ยนได้ด้วย `GEMINI_MODEL` เช่น:
+แอปจะลอง fallback model ให้อัตโนมัติเมื่อเจอ 404 / model unavailable หากต้องการกำหนดเอง:
 
 ```env
-GEMINI_MODEL=gemini-2.5-flash
+GEMINI_MODEL=gemini-3.8-flash
+GEMINI_FALLBACK_MODELS=gemini-3.7-flash,gemini-3.6-flash,gemini-3.5-flash
 ```
 
-เลือกโมเดลที่รองรับ image input และเปิดให้ใช้กับบัญชี Google AI Studio ของคุณ
-
-## ตัวอย่างกรณีเมนูซ้ำ
+## ตัวอย่างเมนูซ้ำ
 
 ใบเสร็จ: `กะเพรา x2` ราคาชิ้นละ 100 บาท
 
-หลังยืนยันรายการ แอปจะแสดง:
-
-- กะเพรา #1 — เลือก A, B → คนละ 50 บาท
-- กะเพรา #2 — เลือก C → 100 บาท
+- กะเพรา #1 → A, B = คนละ 50 บาท
+- กะเพรา #2 → C = 100 บาท
 
 ## ทดสอบ
 
@@ -104,10 +81,13 @@ pytest -q
 
 ## ความปลอดภัย
 
-- `.env` ถูกใส่ไว้ใน `.gitignore` แล้ว
-- อย่านำ API key ไปเขียนตรง ๆ ใน `app.py`
-- หากเคยเผยแพร่ key ใน GitHub/แชต ให้ revoke key แล้วสร้างใหม่
+- อย่าเขียน API key ลง `app.py`
+- อย่า commit `.env` หรือ `.streamlit/secrets.toml`
+- ถ้า key เคยถูกเผยแพร่ ให้ revoke แล้วสร้างใหม่
+- ใบเสร็จจะถูกส่งไปยัง Gemini API เมื่อผู้ใช้กดอ่านด้วย AI
 
-## หมายเหตุ
+## แชร์สรุปเป็นรูปภาพ
 
-ผลจาก AI ควรตรวจทานกับใบเสร็จก่อนกดคำนวณเสมอ โดยเฉพาะใบเสร็จที่ภาพเบลอ มีส่วนลดซับซ้อน หรือร้านแสดง VAT/Service ในรูปแบบไม่มาตรฐาน
+หลังคำนวณยอดแล้ว แอปจะแสดงส่วน **แชร์สรุปให้เพื่อน** พร้อมปุ่ม **บันทึกภาพสรุป (.png)** ภาพประกอบด้วยชื่อร้าน ยอดที่แต่ละคนต้องจ่าย ยอดรวม และรายการที่ถูกแบ่งแล้ว เหมาะสำหรับบันทึกจากมือถือแล้วส่งต่อผ่าน LINE, Messenger หรือแอปแชตอื่น
+
+ฟีเจอร์นี้สร้างภาพบนเซิร์ฟเวอร์จากข้อมูลบิล จึงไม่ต้องอนุญาตสิทธิ์จับภาพหน้าจอของเครื่อง และไม่บันทึกภาพใบเสร็จต้นฉบับลงในภาพสรุป

@@ -9,9 +9,10 @@ import streamlit as st
 
 from billing import calculate_bill
 from receipt_parser import parse_receipt_image
+from share_card import build_share_card
 
 
-st.set_page_config(page_title='หารบิลจากใบเสร็จ', page_icon='🧾', layout='wide')
+st.set_page_config(page_title='หารบิลจากใบเสร็จ', page_icon='🧾', layout='centered')
 st.title('🧾 หารบิลจากใบเสร็จ')
 st.caption('อ่านใบเสร็จด้วย Google Gemini → ตรวจรายการ → แยกของที่สั่งซ้ำ → ระบุว่าใครกิน → คำนวณยอด')
 
@@ -78,7 +79,7 @@ if image_file:
                 st.session_state.receipt_data = parsed
                 st.session_state.instances = None
                 st.session_state.calc_result = None
-                st.success('อ่านใบเสร็จแล้ว กรุณาตรวจข้อมูลด้านล่าง')
+                st.success(f"อ่านใบเสร็จแล้วด้วย {parsed.get('_model_used', 'Gemini')} กรุณาตรวจข้อมูลด้านล่าง")
             except Exception as e:
                 st.error(f'อ่านใบเสร็จไม่สำเร็จ: {e}')
 
@@ -251,9 +252,37 @@ if st.session_state.get('calc_result'):
         ],
         'summary': {p: float(result['totals'][p]) for p in people},
     }
-    st.download_button(
-        'ดาวน์โหลดผลลัพธ์ JSON',
-        data=json.dumps(export, ensure_ascii=False, indent=2),
-        file_name='bill_split_result.json',
-        mime='application/json',
+    st.divider()
+    st.subheader('📤 แชร์สรุปให้เพื่อน')
+    st.caption('กดบันทึกภาพสรุป แล้วส่งรูปผ่าน LINE, Messenger, Instagram หรือแอปอื่นได้เลย')
+
+    share_png = build_share_card(
+        merchant=d.get('merchant', ''),
+        people=people,
+        totals={p: float(result['totals'][p]) for p in people},
+        calculated_total=calculated_total,
+        receipt_total=float(d.get('total', 0) or 0),
+        items=st.session_state.instances,
     )
+
+    st.image(share_png, caption='ตัวอย่างภาพที่จะบันทึก', use_container_width=True)
+    share_col, json_col = st.columns(2)
+    with share_col:
+        st.download_button(
+            '📸 บันทึกภาพสรุป (.png)',
+            data=share_png,
+            file_name='bill_summary.png',
+            mime='image/png',
+            type='primary',
+            use_container_width=True,
+        )
+    with json_col:
+        st.download_button(
+            'ดาวน์โหลดข้อมูล (.json)',
+            data=json.dumps(export, ensure_ascii=False, indent=2),
+            file_name='bill_split_result.json',
+            mime='application/json',
+            use_container_width=True,
+        )
+
+    st.info('บนมือถือ: หลังบันทึกภาพ ให้เปิดรูปจาก Downloads/Files แล้วกด Share เพื่อส่งให้เพื่อนได้')
