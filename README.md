@@ -55,3 +55,9 @@ GEMINI_MODEL = "gemini-3.8-flash"
 - จัดปุ่ม สมาชิก / รายการ / สรุป ให้อยู่กึ่งกลางและกว้างเท่ากัน
 - ปรับรายชื่อสมาชิกเป็นแถวกะทัดรัด ชื่อซ้าย ปุ่มลบขวา
 - คงข้อความ ยอดรวมทั้งหมด ในสรุปด้านบน
+
+## v7 mobile layout fix
+- Navigation uses three real Streamlit buttons in one forced no-wrap row on mobile.
+- Member add form stays in one row.
+- Member delete button stays on the same row as the member name on iPhone/Safari.
+- Top metric uses the Thai label `ยอดรวมทั้งหมด`.

@@ -40,18 +40,81 @@ header[data-testid="stHeader"] { background:transparent; }
 div[data-testid="stVerticalBlockBorderWrapper"] { border-color:var(--line)!important; border-radius:12px!important; box-shadow:none!important; }
 .stButton button, .stDownloadButton button { border-radius:8px; font-weight:700; }
 .stButton button[kind="primary"], .stDownloadButton button[kind="primary"] { background:var(--blue); border-color:var(--blue); }
-/* Navigation is rendered with three real buttons, avoiding radio wrapping on iPhone. */
-.nav-spacer { height:2px; }
+/* Mobile-safe navigation + member rows.  Streamlit normally stacks columns on narrow screens,
+   so these scoped containers explicitly keep only these UI groups on one row. */
+.nav-spacer { height:4px; }
+.st-key-top_nav {
+  width:100%;
+  max-width:640px;
+  margin:0 auto .45rem auto;
+  padding:0 .15rem;
+}
+.st-key-top_nav [data-testid="stHorizontalBlock"],
+.st-key-member_add [data-testid="stHorizontalBlock"],
+.st-key-member_list [data-testid="stHorizontalBlock"] {
+  display:flex !important;
+  flex-wrap:nowrap !important;
+  width:100% !important;
+  align-items:center !important;
+}
+.st-key-top_nav [data-testid="column"] {
+  flex:1 1 0 !important;
+  width:0 !important;
+  min-width:0 !important;
+}
+.st-key-top_nav .stButton button {
+  min-height:2.75rem;
+  white-space:nowrap !important;
+  padding-left:.35rem !important;
+  padding-right:.35rem !important;
+}
+.st-key-member_add [data-testid="column"]:first-child {
+  flex:1 1 auto !important;
+  width:auto !important;
+  min-width:0 !important;
+}
+.st-key-member_add [data-testid="column"]:last-child {
+  flex:0 0 84px !important;
+  width:84px !important;
+  min-width:84px !important;
+}
+.st-key-member_add .stButton button {
+  min-height:2.75rem;
+}
+.st-key-member_list [data-testid="column"]:first-child {
+  flex:1 1 auto !important;
+  width:auto !important;
+  min-width:0 !important;
+}
+.st-key-member_list [data-testid="column"]:last-child {
+  flex:0 0 46px !important;
+  width:46px !important;
+  min-width:46px !important;
+}
+.st-key-member_list .stButton button {
+  width:42px !important;
+  min-width:42px !important;
+  height:42px !important;
+  min-height:42px !important;
+  padding:0 !important;
+  border-radius:10px !important;
+  font-size:1.15rem !important;
+  line-height:1 !important;
+}
 .member-name {
+  display:flex;
+  align-items:center;
+  min-height:42px;
   font-weight:800;
   font-size:1rem;
   color:var(--text);
-  line-height:2.4rem;
+  line-height:1.15;
+  padding-left:.15rem;
 }
 .member-divider {
   height:1px;
   background:var(--line);
-  margin:2px 0 6px;
+  margin:3px 0 5px;
 }
 [data-testid="stMetric"] { background:var(--soft); padding:10px 12px; border-radius:10px; }
 @media (max-width: 640px) {
@@ -181,50 +244,55 @@ metric_html = f"""
 """
 st.markdown(metric_html, unsafe_allow_html=True)
 
-nav_pad_l, nav_1, nav_2, nav_3, nav_pad_r = st.columns([0.20, 1, 1, 1, 0.20], gap="small")
-with nav_1:
-    if st.button("สมาชิก", key="nav_members", use_container_width=True, type="primary" if st.session_state.active_view == "สมาชิก" else "secondary"):
-        st.session_state.active_view = "สมาชิก"
-        st.rerun()
-with nav_2:
-    if st.button("รายการ", key="nav_expenses", use_container_width=True, type="primary" if st.session_state.active_view == "รายการ" else "secondary"):
-        st.session_state.active_view = "รายการ"
-        st.rerun()
-with nav_3:
-    if st.button("สรุป", key="nav_summary", use_container_width=True, type="primary" if st.session_state.active_view == "สรุป" else "secondary"):
-        st.session_state.active_view = "สรุป"
-        st.rerun()
+with st.container(key="top_nav"):
+    nav_1, nav_2, nav_3 = st.columns(3, gap="small", vertical_alignment="center")
+    with nav_1:
+        if st.button("สมาชิก", key="nav_members", use_container_width=True, type="primary" if st.session_state.active_view == "สมาชิก" else "secondary"):
+            st.session_state.active_view = "สมาชิก"
+            st.rerun()
+    with nav_2:
+        if st.button("รายการ", key="nav_expenses", use_container_width=True, type="primary" if st.session_state.active_view == "รายการ" else "secondary"):
+            st.session_state.active_view = "รายการ"
+            st.rerun()
+    with nav_3:
+        if st.button("สรุป", key="nav_summary", use_container_width=True, type="primary" if st.session_state.active_view == "สรุป" else "secondary"):
+            st.session_state.active_view = "สรุป"
+            st.rerun()
 st.markdown('<div class="nav-spacer"></div>', unsafe_allow_html=True)
 view = st.session_state.active_view
 
 if view == "สมาชิก":
     st.markdown('<div class="section-label">สมาชิก</div>', unsafe_allow_html=True)
-    add_col, btn_col = st.columns([4.5, 1.25], gap="small", vertical_alignment="center")
-    with add_col:
-        new_member = st.text_input("ชื่อสมาชิก", placeholder="เช่น Nat", label_visibility="collapsed", key="new_member")
-    with btn_col:
-        if st.button("เพิ่ม", type="primary", use_container_width=True, key="add_member"):
-            name = new_member.strip()
-            if name and name not in st.session_state.people:
-                st.session_state.people.append(name)
-                st.session_state.new_member = ""
-                st.rerun()
+
+    with st.container(key="member_add"):
+        add_col, btn_col = st.columns([1, 0.18], gap="small", vertical_alignment="center")
+        with add_col:
+            new_member = st.text_input("ชื่อสมาชิก", placeholder="เช่น Nat", label_visibility="collapsed", key="new_member")
+        with btn_col:
+            if st.button("เพิ่ม", type="primary", use_container_width=True, key="add_member"):
+                name = new_member.strip()
+                if name and name not in st.session_state.people:
+                    st.session_state.people.append(name)
+                    st.session_state.new_member = ""
+                    st.rerun()
 
     if not st.session_state.people:
         st.info("เพิ่มสมาชิกก่อนเริ่มหารบิล")
-    for idx, person in enumerate(list(st.session_state.people)):
-        c1, c2 = st.columns([8.5, 1.2], gap="small", vertical_alignment="center")
-        with c1:
-            st.markdown(f'<div class="member-name">{html.escape(person)}</div>', unsafe_allow_html=True)
-        with c2:
-            if st.button("×", key=f"remove_person_{idx}", use_container_width=True, help=f"ลบ {person}"):
-                st.session_state.people.remove(person)
-                for item in st.session_state.expenses:
-                    item["people"] = [p for p in item.get("people", []) if p != person]
-                    if item.get("payer") == person:
-                        item["payer"] = ""
-                st.rerun()
-        st.markdown('<div class="member-divider"></div>', unsafe_allow_html=True)
+
+    with st.container(key="member_list"):
+        for idx, person in enumerate(list(st.session_state.people)):
+            c1, c2 = st.columns([1, 0.08], gap="small", vertical_alignment="center")
+            with c1:
+                st.markdown(f'<div class="member-name">{html.escape(person)}</div>', unsafe_allow_html=True)
+            with c2:
+                if st.button("×", key=f"remove_person_{idx}", use_container_width=False, help=f"ลบ {person}"):
+                    st.session_state.people.remove(person)
+                    for item in st.session_state.expenses:
+                        item["people"] = [p for p in item.get("people", []) if p != person]
+                        if item.get("payer") == person:
+                            item["payer"] = ""
+                    st.rerun()
+            st.markdown('<div class="member-divider"></div>', unsafe_allow_html=True)
 
     if st.session_state.people and st.button("ล้างสมาชิกทั้งหมด", use_container_width=True):
         st.session_state.people = []
