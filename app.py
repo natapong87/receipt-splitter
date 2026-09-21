@@ -132,7 +132,7 @@ div[data-testid="stVerticalBlockBorderWrapper"] { border-color:var(--line)!impor
   white-space:nowrap!important;
 }
 
-/* Compact member controls. Use native horizontal containers instead of columns. */
+/* Compact member controls. */
 .st-key-member_add input {
   min-height:2.25rem!important;
   height:2.25rem!important;
@@ -150,63 +150,118 @@ div[data-testid="stVerticalBlockBorderWrapper"] { border-color:var(--line)!impor
   padding:.15rem .75rem!important;
 }
 
-/* Member list must never become an internal scroll area. */
+/*
+Member rows use real Streamlit columns with wrap=False. The final column has a
+fixed visual width so every delete button lines up on phones, regardless of the
+member-name length or viewport width.
+*/
 .st-key-member_list,
 .st-key-member_list > div,
-.st-key-member_list [data-testid="stVerticalBlock"],
-.st-key-member_list [data-testid="stHorizontalBlock"] {
+.st-key-member_list [data-testid="stVerticalBlock"] {
   overflow:visible!important;
   max-height:none!important;
   height:auto!important;
 }
 .st-key-member_list [data-testid="stVerticalBlock"] { gap:0!important; }
 [class*="st-key-member_row_"] {
-  min-height:30px!important;
-  height:30px!important;
+  width:100%!important;
+  min-height:38px!important;
+  margin:0!important;
+  padding:3px 0!important;
+  border-bottom:1px solid var(--line)!important;
   overflow:visible!important;
+  box-sizing:border-box!important;
+}
+[class*="st-key-member_row_"] > div,
+[class*="st-key-member_row_"] [data-testid="stVerticalBlock"] {
+  gap:0!important;
+  margin:0!important;
+  padding:0!important;
 }
 [class*="st-key-member_row_"] [data-testid="stHorizontalBlock"] {
-  min-height:30px!important;
-  height:30px!important;
+  width:100%!important;
+  min-height:32px!important;
+  height:32px!important;
   align-items:center!important;
-  justify-content:space-between!important;
   flex-wrap:nowrap!important;
+  gap:0!important;
   overflow:visible!important;
 }
-[class*="st-key-member_row_"] .stButton {
-  margin:0!important;
+[class*="st-key-member_row_"] [data-testid="stColumn"] {
+  min-width:0!important;
+  height:32px!important;
+  display:flex!important;
+  align-items:center!important;
   padding:0!important;
-  flex:0 0 26px!important;
+  margin:0!important;
 }
-[class*="st-key-member_row_"] .stButton button {
-  width:26px!important;
-  min-width:26px!important;
-  max-width:26px!important;
-  height:26px!important;
-  min-height:26px!important;
-  max-height:26px!important;
+[class*="st-key-member_row_"] [data-testid="stColumn"]:first-child {
+  flex:1 1 auto!important;
+  width:auto!important;
+}
+[class*="st-key-member_row_"] [data-testid="stColumn"]:last-child {
+  flex:0 0 38px!important;
+  width:38px!important;
+  min-width:38px!important;
+  max-width:38px!important;
+  justify-content:flex-end!important;
+}
+[class*="st-key-member_row_"] [data-testid="stMarkdownContainer"],
+[class*="st-key-member_row_"] [data-testid="stMarkdownContainer"] p {
+  width:100%!important;
+  margin:0!important;
+  padding:0!important;
+}
+.member-name {
+  display:flex;
+  align-items:center;
+  width:100%;
+  min-width:0;
+  height:32px;
+  margin:0;
+  padding:0 .5rem 0 .15rem;
+  font-weight:800;
+  font-size:.93rem;
+  color:var(--text);
+  line-height:1.2;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  box-sizing:border-box;
+}
+[class*="st-key-remove_person_"] {
+  width:30px!important;
+  min-width:30px!important;
+  max-width:30px!important;
+  height:30px!important;
+  margin:0 0 0 auto!important;
+  padding:0!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+}
+[class*="st-key-remove_person_"] [data-testid="stButton"] {
+  width:30px!important;
+  height:30px!important;
+  margin:0!important;
+  padding:0!important;
+}
+[class*="st-key-remove_person_"] button {
+  width:30px!important;
+  min-width:30px!important;
+  max-width:30px!important;
+  height:30px!important;
+  min-height:30px!important;
+  max-height:30px!important;
   padding:0!important;
   margin:0!important;
-  border-radius:6px!important;
-  font-size:.88rem!important;
+  border-radius:7px!important;
+  font-size:.9rem!important;
   line-height:1!important;
   display:flex!important;
   align-items:center!important;
   justify-content:center!important;
 }
-.member-name {
-  display:flex;
-  align-items:center;
-  min-height:26px;
-  height:26px;
-  font-weight:800;
-  font-size:.93rem;
-  color:var(--text);
-  line-height:1;
-  padding-left:.1rem;
-  white-space:nowrap;
-}
-.member-divider { height:1px; background:var(--line); margin:0; }
 .st-key-clear_members { margin-top:.15rem; text-align:center; }
 .st-key-clear_members .stButton button {
   min-height:2rem!important;
@@ -299,6 +354,13 @@ def add_member_from_input():
     if name and name not in st.session_state.people:
         st.session_state.people.append(name)
     st.session_state["new_member"] = ""
+
+
+def remove_member(person: str):
+    """Remove a member and detach them from every expense before rerendering."""
+    st.session_state.people = [p for p in st.session_state.people if p != person]
+    for item in st.session_state.expenses:
+        item["people"] = [p for p in item.get("people", []) if p != person]
 
 
 def select_all_consumers(item_id: str):
@@ -395,29 +457,28 @@ if view == "สมาชิก":
 
     with st.container(key="member_list", gap=None):
         for idx, person in enumerate(list(st.session_state.people)):
-            with st.container(
-                key=f"member_row_{idx}",
-                horizontal=True,
-                horizontal_alignment="distribute",
-                vertical_alignment="center",
-                gap=None,
-            ):
-                st.markdown(
-                    f'<div class="member-name">{html.escape(person)}</div>',
-                    unsafe_allow_html=True,
+            with st.container(key=f"member_row_{idx}", gap=None):
+                name_col, remove_col = st.columns(
+                    [12, 1],
+                    gap=None,
+                    vertical_alignment="center",
+                    wrap=False,
                 )
-                if st.button(
-                    "×",
-                    key=f"remove_person_{idx}",
-                    type="secondary",
-                    width=26,
-                    help=f"ลบ {person}",
-                ):
-                    st.session_state.people.remove(person)
-                    for item in st.session_state.expenses:
-                        item["people"] = [p for p in item.get("people", []) if p != person]
-                    st.rerun()
-            st.markdown('<div class="member-divider"></div>', unsafe_allow_html=True)
+                with name_col:
+                    st.markdown(
+                        f'<div class="member-name" title="{html.escape(person)}">{html.escape(person)}</div>',
+                        unsafe_allow_html=True,
+                    )
+                with remove_col:
+                    st.button(
+                        "×",
+                        key=f"remove_person_{idx}",
+                        type="secondary",
+                        width=30,
+                        help=f"ลบ {person}",
+                        on_click=remove_member,
+                        args=(person,),
+                    )
 
     if st.session_state.people:
         with st.container(key="clear_members", horizontal=True, horizontal_alignment="center", gap=None):

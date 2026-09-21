@@ -29,3 +29,13 @@ def test_mobile_compact_expense_rows_and_red_delete_buttons():
     assert '[class*="st-key-del_"] button' in APP_SOURCE
     assert 'background:#ef4444!important' in APP_SOURCE
     assert 'color:#fff!important' in APP_SOURCE
+
+
+def test_member_rows_use_fixed_delete_column_and_callback():
+    assert 'name_col, remove_col = st.columns' in APP_SOURCE
+    assert '[12, 1]' in APP_SOURCE
+    assert 'vertical_alignment="center"' in APP_SOURCE
+    assert 'on_click=remove_member' in APP_SOURCE
+    assert 'width=30' in APP_SOURCE
+    assert 'flex:0 0 38px!important' in APP_SOURCE
+    assert 'text-overflow:ellipsis' in APP_SOURCE
